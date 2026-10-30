@@ -18,13 +18,11 @@ setup(
     zip_safe=True,
     maintainer="Terry Yang",
     maintainer_email="terry.yang.apply@gmail.com",
-    description="D435i ArUco + PnP pose, checked against motion capture ground truth.",
+    description="D435i ArUco + IPPE pose, one node per marker of the two-marker ridge target.",
     license="MIT",
     entry_points={
         "console_scripts": [
             "aruco_pose = aruco_mocap.aruco_node:main",
-            "mocap_gt = aruco_mocap.mocap_gt_node:main",
-            "fake_mocap = aruco_mocap.fake_mocap:main",
         ],
     },
 )

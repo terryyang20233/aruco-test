@@ -3,7 +3,7 @@
 <package format="3">
   <name>aruco_mocap</name>
   <version>0.1.0</version>
-  <description>D435i ArUco + PnP pose, checked against motion capture ground truth.</description>
+  <description>D435i ArUco + IPPE pose, one node per marker of the two-marker ridge target.</description>
   <maintainer email="terry.yang.apply@gmail.com">Terry Yang</maintainer>
   <license>MIT</license>
 
@@ -11,12 +11,10 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>tf2_ros</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
-  <exec_depend>vrpn_mocap</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <!-- OpenCV 用 pip 装（需要 ≥ 4.7 的 ArUco 接口），见 实验方案.md §3.4，这里故意不写 python3-opencv -->

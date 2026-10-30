@@ -6,8 +6,11 @@
 - aruco/debug_image Image（bgr8），画了框和坐标轴，降频发布，给笔记本看
 
 不用 cv_bridge：它的 C++ 部分链接系统 OpenCV 4.5，和 pip 装的新版 OpenCV 混在一个进程里容易出问题。
+自己拼 Image 消息时，data 一定要给 array.array('B')：Humble 对 bytes 会逐个元素检查范围，
+一张 1 MB 的图要 170–230 ms（Orin 上实测），节点会被拖到只剩 4–16 Hz。
 """
 
+import array
 import json
 import time
 
@@ -85,6 +88,7 @@ class ArucoPoseNode(Node):
         self.frames = 0
         self.hits = 0
         self.processing_ms = []
+        self.callback_ms = []  # 整个回调，包括转换、发布和调试图
         self.create_timer(float(self.get_parameter("stats_period_s").value), self.report)
         self.get_logger().info(
             f"图像 {image_topic}，内参 {info_topic}，标记 {self.marker_id} 号，边长 {self.side} m，"
@@ -107,6 +111,7 @@ class ArucoPoseNode(Node):
             self.get_logger().warn("还没收到 camera_info，先不检测", throttle_duration_sec=2.0)
             return
         self.frames += 1
+        callback_start = time.perf_counter()
         image, is_rgb = image_to_array(msg)
         start = time.perf_counter()
         gray = image if image.ndim == 2 else cv2.cvtColor(
@@ -138,6 +143,7 @@ class ArucoPoseNode(Node):
         if self.debug_period is not None and now - self.last_debug >= self.debug_period:
             self.last_debug = now
             self.publish_debug(msg.header, image, is_rgb, result)
+        self.callback_ms.append((time.perf_counter() - callback_start) * 1000.0)
 
     @staticmethod
     def to_pose(header, result):
@@ -167,7 +173,7 @@ class ArucoPoseNode(Node):
         out.height, out.width = canvas.shape[:2]
         out.encoding = "bgr8"
         out.step = out.width * 3
-        out.data = np.ascontiguousarray(canvas).tobytes()
+        out.data = array.array("B", np.ascontiguousarray(canvas).tobytes())
         self.debug_pub.publish(out)
 
     def report(self):
@@ -175,13 +181,17 @@ class ArucoPoseNode(Node):
             self.get_logger().info("这段时间没有收到图像")
             return
         times = np.array(self.processing_ms)
+        callbacks = np.array(self.callback_ms)
+        period = float(self.get_parameter("stats_period_s").value)
         self.get_logger().info(
-            f"{self.frames} 帧，检出 {self.hits}（{100.0 * self.hits / self.frames:.0f}%），"
-            f"处理耗时 中位 {np.median(times):.1f} ms / 95% {np.percentile(times, 95):.1f} ms"
+            f"{self.frames / period:.1f} Hz（{self.frames} 帧），检出 {self.hits}（{100.0 * self.hits / self.frames:.0f}%），"
+            f"检测耗时 中位 {np.median(times):.1f} ms / 95% {np.percentile(times, 95):.1f} ms，"
+            f"整个回调 中位 {np.median(callbacks):.1f} ms / 最长 {callbacks.max():.1f} ms"
         )
         self.frames = 0
         self.hits = 0
         self.processing_ms = []
+        self.callback_ms = []
 
 
 def main():

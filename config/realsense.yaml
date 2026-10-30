@@ -1,0 +1,20 @@
+# 交给 realsense2_camera 的 rs_launch.py（config_file 参数），优先级高于 rs_launch 的默认值。
+# rs_launch 会对它没声明的名字打 “not supported” 警告，但照样传给相机节点。参数名以 ros2 param list /camera/camera 为准。
+
+# 关掉红外投射器：红外图上全是它打的点，干扰标记检测；我们不用深度。（在 mocap 室里它还会被当成假反光球）
+depth_module.emitter_enabled: 0
+
+# 0 关，1 = 50 Hz，2 = 60 Hz（D435i 固件 5.15 只接受 0–2）。北美 60 Hz；在 50 Hz 地区改成 1
+rgb_camera.power_line_frequency: 2
+
+# 帧率被曝光拖慢的问题（Orin 上实测：红外 4 Hz，彩色 9–16 Hz，USB 3.2 正常、检测只要 5 ms）。
+# 彩色：关掉“自动曝光优先”，暗处也保持 30 fps，代价是画面偏暗。
+rgb_camera.auto_exposure_priority: false
+
+# 红外：投射器关掉后室内几乎没有 850 nm 的光，自动曝光会拉到上百毫秒，帧率掉到 4 Hz。
+# 改成手动曝光，必须 < 33 ms 才能跑满 30 fps。太暗就加增益（16–248），运行中可以直接改：
+#   ros2 param set /camera/camera depth_module.exposure 15000
+#   ros2 param set /camera/camera depth_module.gain 128
+depth_module.enable_auto_exposure: false
+depth_module.exposure: 20000   # 微秒
+depth_module.gain: 64

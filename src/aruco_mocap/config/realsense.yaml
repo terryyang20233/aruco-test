@@ -1,8 +1,0 @@
-# 交给 realsense2_camera 的 rs_launch.py（config_file 参数）。rs_launch 只转发它声明过的启动参数，
-# 下面这几个它没声明，只能从这里传。参数名以 ros2 param list /camera/camera 为准。
-
-# 关掉红外投射器：mocap 会把它的点阵当成假反光球，红外图上也全是点（实验方案.md §3.5）
-depth_module.emitter_enabled: 0
-
-# 0 关，1 = 50 Hz，2 = 60 Hz，3 = 自动。日光灯下短曝光出横条纹时，改成当地电网频率
-rgb_camera.power_line_frequency: 3

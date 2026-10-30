@@ -16,7 +16,7 @@ import numpy as np
 
 DICTIONARY_ID = cv2.aruco.DICT_4X4_50
 MARKER_ID = 0
-SIDE = 0.15  # 黑方块外沿，米。打印后用尺子量，改成实测值。
+SIDE = 0.105  # 黑方块外沿，米。打印后用尺子量，改成实测值。
 
 REFINEMENT = {
     "none": cv2.aruco.CORNER_REFINE_NONE,
